@@ -5,13 +5,15 @@ use std::{
 
 use crate::{agent_bridge::RemoteGattAgentClient, gatt_handler::GattHandler};
 
+type GattKey = (String, String, String);
+
 pub enum RegisteredGattHandler {
     Local(Arc<dyn GattHandler>),
     Remote(Arc<dyn RemoteGattAgentClient>),
 }
 
 pub struct GattRegistry {
-    handlers: RwLock<HashMap<(String, String, String), RegisteredGattHandler>>,
+    handlers: RwLock<HashMap<GattKey, RegisteredGattHandler>>,
 }
 
 impl GattRegistry {
@@ -31,7 +33,10 @@ impl GattRegistry {
         self.handlers
             .write()
             .expect("gatt registry poisoned")
-            .insert((app_id, service_id, characteristic_id), RegisteredGattHandler::Local(handler));
+            .insert(
+                (app_id, service_id, characteristic_id),
+                RegisteredGattHandler::Local(handler)
+            );
     }
 
     pub fn register_remote(
@@ -44,7 +49,22 @@ impl GattRegistry {
         self.handlers
             .write()
             .expect("gatt registry poisoned")
-            .insert((app_id, service_id, characteristic_id), RegisteredGattHandler::Remote(handler));
+            .insert(
+                (app_id, service_id, characteristic_id),
+                RegisteredGattHandler::Remote(handler)
+            );
+    }
+
+    pub fn unregister(
+        &self,
+        app_id: &str,
+        service_id: &str,
+        characteristic_id: &str,
+    ) -> Option<RegisteredGattHandler> {
+        self.handlers
+            .write()
+            .expect("gatt registry poisoned")
+            .remove(&(app_id.to_string(), service_id.to_string(), characteristic_id.to_string()))
     }
 
     pub fn get(

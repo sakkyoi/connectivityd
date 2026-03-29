@@ -312,6 +312,7 @@ dependencies = [
 name = "connectivity-config"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "serde",
 ]
 
@@ -321,6 +322,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "connectivity-app",
+ "connectivity-config",
+ "connectivity-domain",
+ "serde",
  "tracing",
  "zbus",
 ]

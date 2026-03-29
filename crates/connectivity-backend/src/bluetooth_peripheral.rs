@@ -8,13 +8,23 @@ use connectivity_domain::{
 
 #[async_trait]
 pub trait BluetoothPeripheralBackend: Send + Sync {
+    //
+    // Adapter inventory / power
+    //
+
     async fn list_adapters(&self) -> Result<Vec<BluetoothAdapter>, ConnectivityError>;
+
+    async fn get_adapter(&self, adapter_id: &str) -> Result<BluetoothAdapter, ConnectivityError>;
 
     async fn set_powered(
         &self,
         adapter_id: &str,
         powered: bool,
     ) -> Result<(), ConnectivityError>;
+
+    //
+    // Advertising
+    //
 
     async fn start_advertising(
         &self,
@@ -26,6 +36,10 @@ pub trait BluetoothPeripheralBackend: Send + Sync {
         advertisement_id: &str,
     ) -> Result<(), ConnectivityError>;
 
+    //
+    // Local GATT application hosting
+    //
+
     async fn register_gatt_application(
         &self,
         app: GattApplicationDef,
@@ -35,6 +49,10 @@ pub trait BluetoothPeripheralBackend: Send + Sync {
         &self,
         app_id: &str,
     ) -> Result<(), ConnectivityError>;
+
+    //
+    // Notifications / indications
+    //
 
     async fn notify(&self, request: NotifyRequest) -> Result<(), ConnectivityError>;
 }

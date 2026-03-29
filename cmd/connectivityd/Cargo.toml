@@ -7,6 +7,10 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
 connectivity-app = { path = "../../crates/connectivity-app" }
 connectivity-backend-bluez = { path = "../../crates/connectivity-backend-bluez" }
 connectivity-backend-nm = { path = "../../crates/connectivity-backend-nm" }
@@ -15,6 +19,3 @@ connectivity-dbus = { path ="../../crates/connectivity-dbus" }
 connectivity-events = { path = "../../crates/connectivity-events" }
 connectivity-grpc = { path = "../../crates/connectivity-grpc" }
 connectivity-http = { path = "../../crates/connectivity-http" }
-tokio.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true

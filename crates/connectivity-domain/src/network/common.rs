@@ -5,12 +5,20 @@ pub enum NetworkInterfaceKind {
     Ethernet,
     Wifi,
     Vpn,
+    Unknown,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum OperationalState {
-    Unknown,
+pub enum InterfaceState {
     Down,
     Up,
-    Dormant,
+    Unknown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ConnectionState {
+    Disconnected,
+    Connecting,
+    Connected,
+    Failed,
 }

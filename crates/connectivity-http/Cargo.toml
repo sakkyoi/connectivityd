@@ -8,6 +8,7 @@ rust-version.workspace = true
 [dependencies]
 anyhow.workspace = true
 axum.workspace = true
-connectivity-app = { path = "../connectivity-app" }
 serde.workspace = true
 tokio.workspace = true
+
+connectivity-app = { path = "../connectivity-app" }

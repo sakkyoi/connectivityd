@@ -33,7 +33,8 @@ impl AppContext {
         let gatt_registry = Arc::new(GattRegistry::new());
         let gatt_dispatcher = GattDispatcher::new(gatt_registry.clone());
         let network = NetworkService::new(network_backend, events.clone());
-        let bluetooth_peripheral = BluetoothPeripheralService::new(bluetooth_backend, events.clone());
+        let bluetooth_peripheral =
+            BluetoothPeripheralService::new(bluetooth_backend, events.clone());
 
         Self {
             network,

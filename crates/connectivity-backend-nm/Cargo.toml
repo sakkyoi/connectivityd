@@ -7,7 +7,8 @@ rust-version.workspace = true
 
 [dependencies]
 async-trait.workspace = true
-connectivity-backend = { path = "../connectivity-backend" }
-connectivity-domain = { path = "../connectivity-domain" }
 tracing.workspace = true
 zbus.workspace = true
+
+connectivity-backend = { path = "../connectivity-backend" }
+connectivity-domain = { path = "../connectivity-domain" }

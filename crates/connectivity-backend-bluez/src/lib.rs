@@ -21,6 +21,10 @@ impl BluetoothPeripheralBackend for BluezPeripheralBackend {
         Ok(vec![])
     }
 
+    async fn get_adapter(&self, _adapter_id: &str) -> Result<BluetoothAdapter, ConnectivityError> {
+        Err(ConnectivityError::Unsupported)
+    }
+
     async fn set_powered(
         &self,
         _adapter_id: &str,

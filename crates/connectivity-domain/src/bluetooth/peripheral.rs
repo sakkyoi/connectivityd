@@ -75,7 +75,7 @@ pub struct CharacteristicWriteRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacteristicWriteResponse {
-    pub value: Vec<u8>,
+    pub accepted: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -106,6 +106,7 @@ pub enum BluetoothPeripheralEvent {
         app_id: String,
         service_id: String,
         characteristic_id: String,
+        value: Vec<u8>,
     },
     SubscriptionChanged {
         connection_id: String,

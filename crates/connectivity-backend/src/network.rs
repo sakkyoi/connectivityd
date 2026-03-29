@@ -3,21 +3,31 @@ use connectivity_domain::{
     network::{
         ethernet::{ApplyEthernetConfigRequest, EthernetConfig},
         interface::NetworkInterface,
-        vpn::{ConnectVpnRequest, VpnProfile},
-        wifi::{SavedWifiProfile, WifiConnectRequest, WifiScanRequest, WifiVisibleNetwork},
+        vpn::{ConnectVpnRequest, VpnProfile, VpnStatus},
+        wifi::{SavedWifiNetwork, WifiConnectRequest, WifiNetwork, WifiScanRequest},
     },
     ConnectivityError,
 };
 
 #[async_trait]
 pub trait NetworkBackend: Send + Sync {
+    //
+    // Interface inventory / state
+    //
+
     async fn list_interfaces(&self) -> Result<Vec<NetworkInterface>, ConnectivityError>;
+
+    async fn get_interface(&self, interface_id: &str) -> Result<NetworkInterface, ConnectivityError>;
 
     async fn set_interface_enabled(
         &self,
         interface_id: &str,
         enabled: bool,
     ) -> Result<(), ConnectivityError>;
+
+    //
+    // Ethernet
+    //
 
     async fn get_ethernet_config(
         &self,
@@ -29,12 +39,16 @@ pub trait NetworkBackend: Send + Sync {
         request: ApplyEthernetConfigRequest,
     ) -> Result<(), ConnectivityError>;
 
+    //
+    // Wi-Fi
+    //
+
     async fn scan_wifi(&self, request: WifiScanRequest) -> Result<(), ConnectivityError>;
 
     async fn list_visible_wifi_networks(
         &self,
         interface_id: Option<&str>,
-    ) -> Result<Vec<WifiVisibleNetwork>, ConnectivityError>;
+    ) -> Result<Vec<WifiNetwork>, ConnectivityError>;
 
     async fn connect_wifi(&self, request: WifiConnectRequest) -> Result<(), ConnectivityError>;
 
@@ -43,16 +57,22 @@ pub trait NetworkBackend: Send + Sync {
         interface_id: Option<&str>,
     ) -> Result<(), ConnectivityError>;
 
-    async fn list_saved_wifi_profiles(
+    async fn list_saved_wifi_networks(
         &self,
         interface_id: Option<&str>,
-    ) -> Result<Vec<SavedWifiProfile>, ConnectivityError>;
+    ) -> Result<Vec<SavedWifiNetwork>, ConnectivityError>;
 
-    async fn forget_wifi_profile(&self, profile_id: &str) -> Result<(), ConnectivityError>;
+    async fn forget_wifi_network(&self, network_id: &str) -> Result<(), ConnectivityError>;
+
+    //
+    // VPN
+    //
 
     async fn list_vpn_profiles(&self) -> Result<Vec<VpnProfile>, ConnectivityError>;
 
     async fn connect_vpn(&self, request: ConnectVpnRequest) -> Result<(), ConnectivityError>;
 
     async fn disconnect_vpn(&self, profile_id: &str) -> Result<(), ConnectivityError>;
+
+    async fn get_vpn_status(&self, profile_id: &str) -> Result<VpnStatus, ConnectivityError>;
 }

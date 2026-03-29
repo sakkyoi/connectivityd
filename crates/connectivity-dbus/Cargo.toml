@@ -7,6 +7,10 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-connectivity-app = { path = "../connectivity-app" }
+serde.workspace = true
 tracing.workspace = true
 zbus.workspace = true
+
+connectivity-app = { path = "../connectivity-app" }
+connectivity-config = { path = "../connectivity-config" }
+connectivity-domain = { path = "../connectivity-domain" }

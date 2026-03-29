@@ -24,7 +24,10 @@ impl GattDispatcher {
         &self,
         request: CharacteristicReadRequest,
     ) -> Result<CharacteristicReadResponse, ConnectivityError> {
-        match self.registry.get(&request.app_id, &request.service_id, &request.characteristic_id) {
+        match self
+            .registry
+            .get(&request.app_id, &request.service_id, &request.characteristic_id)
+        {
             Some(RegisteredGattHandler::Local(handler)) => handler.on_read(request).await,
             Some(RegisteredGattHandler::Remote(agent)) => agent.read(request).await,
             None => Err(ConnectivityError::GattCharacteristicNotFound),
@@ -35,7 +38,10 @@ impl GattDispatcher {
         &self,
         request: CharacteristicWriteRequest,
     ) -> Result<CharacteristicWriteResponse, ConnectivityError> {
-        match self.registry.get(&request.app_id, &request.service_id, &request.characteristic_id) {
+        match self
+            .registry
+            .get(&request.app_id, &request.service_id, &request.characteristic_id)
+        {
             Some(RegisteredGattHandler::Local(handler)) => handler.on_write(request).await,
             Some(RegisteredGattHandler::Remote(agent)) => agent.write(request).await,
             None => Err(ConnectivityError::GattCharacteristicNotFound),
@@ -46,7 +52,10 @@ impl GattDispatcher {
         &self,
         request: SubscriptionChangeRequest,
     ) -> Result<(), ConnectivityError> {
-        match self.registry.get(&request.app_id, &request.service_id, &request.characteristic_id) {
+        match self
+            .registry
+            .get(&request.app_id, &request.service_id, &request.characteristic_id)
+        {
             Some(RegisteredGattHandler::Local(handler)) => handler.on_subscribe(request).await,
             Some(RegisteredGattHandler::Remote(agent)) => agent.subscribe(request).await,
             None => Err(ConnectivityError::GattCharacteristicNotFound),
@@ -57,7 +66,10 @@ impl GattDispatcher {
         &self,
         request: SubscriptionChangeRequest,
     ) -> Result<(), ConnectivityError> {
-        match self.registry.get(&request.app_id, &request.service_id, &request.characteristic_id) {
+        match self
+            .registry
+            .get(&request.app_id, &request.service_id, &request.characteristic_id)
+        {
             Some(RegisteredGattHandler::Local(handler)) => handler.on_unsubscribe(request).await,
             Some(RegisteredGattHandler::Remote(agent)) => agent.unsubscribe(request).await,
             None => Err(ConnectivityError::GattCharacteristicNotFound),
