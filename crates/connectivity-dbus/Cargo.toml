@@ -1,0 +1,12 @@
+[package]
+name = "connectivity-dbus"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+connectivity-app = { path = "../connectivity-app" }
+tracing.workspace = true
+zbus.workspace = true

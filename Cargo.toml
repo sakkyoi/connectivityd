@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = [
+    "cmd/connectivityd",
+    "crates/connectivity-config",
+    "crates/connectivity-domain",
+    "crates/connectivity-backend",
+    "crates/connectivity-events",
+    "crates/connectivity-app",
+    "crates/connectivity-backend-nm",
+    "crates/connectivity-backend-bluez",
+    "crates/connectivity-dbus",
+    "crates/connectivity-http",
+    "crates/connectivity-grpc",
+]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+version = "0.1.0"
+rust-version = "1.92.0"
+
+[workspace.dependencies]
+anyhow = "1"
+async-trait = "0.1"
+axum = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+tonic = "0.14"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+zbus = "5"

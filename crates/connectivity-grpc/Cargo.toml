@@ -1,0 +1,12 @@
+[package]
+name = "connectivity-grpc"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+connectivity-app = { path = "../connectivity-app" }
+tokio.workspace = true
+tonic.workspace = true

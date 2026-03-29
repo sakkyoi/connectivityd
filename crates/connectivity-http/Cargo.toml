@@ -1,0 +1,13 @@
+[package]
+name = "connectivity-http"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+connectivity-app = { path = "../connectivity-app" }
+serde.workspace = true
+tokio.workspace = true

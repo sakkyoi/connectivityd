@@ -1,0 +1,10 @@
+[package]
+name = "connectivity-backend"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+connectivity-domain = { path = "../connectivity-domain" }
