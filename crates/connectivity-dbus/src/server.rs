@@ -16,9 +16,9 @@ impl DbusServer {
 
     pub async fn run(self) -> Result<()> {
         let _connection = ConnectionBuilder::system()?
-            .name("com.example.connectivity")?
-            .serve_at("/com/example/connectivity/Network", NetworkObject::new(self.ctx.clone()))?
-            .serve_at("/com/example/connectivity/WiFi", WifiObject::new(self.ctx.clone()))?
+            .name("com.example.Connectivity")?
+            .serve_at("/com/example/Connectivity/Network", NetworkObject::new(self.ctx.clone()))?
+            .serve_at("/com/example/Connectivity/WiFi", WifiObject::new(self.ctx.clone()))?
             .build()
             .await?;
 
