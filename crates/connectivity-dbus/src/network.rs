@@ -97,6 +97,25 @@ impl NetworkObject {
 
         Ok(interfaces.into_iter().map(Into::into).collect())
     }
+
+    async fn get_interface(&self, interface_id: String) -> fdo::Result<NetworkInterfaceDto> {
+        let iface = self
+            .ctx
+            .network
+            .get_interface(&interface_id)
+            .await
+            .map_err(map_domain_error)?;
+
+        Ok(iface.into())
+    }
+
+    async fn set_interface_enabled(&self, interface_id: String, enabled: bool) -> fdo::Result<()> {
+        self.ctx
+            .network
+            .set_interface_enabled(&interface_id, enabled)
+            .await
+            .map_err(map_domain_error)
+    }
 }
 
 pub struct WifiObject {
@@ -109,7 +128,7 @@ impl WifiObject {
     }
 }
 
-#[interface(name = "com.example.Connectivity.WiFi1")]
+#[interface(name = "com.example.Connectivity.Network.WiFi1")]
 impl WifiObject {
     async fn scan_wifi(&self, interface_id: Optional<String>) -> fdo::Result<()> {
         let interface_id: Option<String> = interface_id.into();
