@@ -514,8 +514,57 @@ impl NetworkBackend for NetworkManagerBackend {
         Ok(result)
     }
 
-    async fn forget_wifi_network(&self, _network_id: &str) -> Result<(), ConnectivityError> {
-        Err(ConnectivityError::Unsupported)
+    async fn forget_wifi_network(&self, network_id: &str) -> Result<(), ConnectivityError> {
+        let conn = self.connection().await?;
+        let settings = NmSettings::new(&conn)
+            .await
+            .map_err(map_zbus_err)?;
+
+        let connection_paths = settings
+            .list_connections()
+            .await
+            .map_err(map_zbus_err)?;
+
+        for path in connection_paths {
+            let profile = NmSettingsConnection::new(&conn, path.clone())
+                .await
+                .map_err(map_zbus_err)?;
+
+            let settings_map = profile
+                .get_settings()
+                .await
+                .map_err(map_zbus_err)?;
+
+            let Some(connection_section) = settings_map.get("connection") else {
+                continue;
+            };
+
+            let Some(conn_type) = connection_section
+                .get("type")
+                .and_then(owned_value_to_string)
+            else {
+                continue;
+            };
+
+            if conn_type != "802-11-wireless" {
+                continue;
+            }
+
+            let profile_id = connection_section
+                .get("uuid")
+                .and_then(owned_value_to_string)
+                .or_else(|| connection_section.get("id").and_then(owned_value_to_string));
+
+            if profile_id.as_deref() == Some(network_id) {
+                profile
+                    .delete()
+                    .await
+                    .map_err(map_zbus_err)?;
+                return Ok(())
+            }
+        }
+
+        Err(ConnectivityError::ProfileNotFound)
     }
 
     async fn list_vpn_profiles(&self) -> Result<Vec<VpnProfile>, ConnectivityError> {
