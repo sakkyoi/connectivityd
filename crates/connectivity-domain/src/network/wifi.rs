@@ -30,7 +30,7 @@ pub struct WifiScanRequest {
 pub struct WifiConnectRequest {
     pub interface_id: Option<String>,
     pub ssid: String,
-    pub passphrase: String,
+    pub passphrase: Option<String>,
     pub ipv4: Option<Ipv4Config>,
     pub ipv6: Option<Ipv6Config>,
 }

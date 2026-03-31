@@ -49,4 +49,8 @@ impl<'a> NmDevice<'a> {
     pub async fn ip6_config(&self) -> zbus::Result<OwnedObjectPath> {
         self.proxy.get_property("Ip6Config").await
     }
+
+    pub async fn active_connection(&self) -> zbus::Result<OwnedObjectPath> {
+        self.proxy.get_property("ActiveConnection").await
+    }
 }

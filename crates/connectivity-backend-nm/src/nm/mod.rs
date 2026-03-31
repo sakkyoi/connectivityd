@@ -5,3 +5,6 @@ pub mod ip6_config;
 pub mod manager;
 pub mod mapping;
 pub mod wireless;
+pub mod settings;
+pub mod active_connection;
+pub mod connection_builder;

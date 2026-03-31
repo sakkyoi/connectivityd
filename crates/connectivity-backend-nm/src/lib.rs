@@ -11,13 +11,19 @@ use connectivity_domain::{
     },
     ConnectivityError,
 };
-use zbus::Connection;
+use zbus::{zvariant::{OwnedObjectPath, OwnedValue}, Connection};
 
 use nm::{
     access_point::NmAccessPoint,
+    active_connection::is_root_path,
+    connection_builder::{build_wifi_connection_settings, ov},
     device::NmDevice,
     manager::NmManager,
-    mapping::{map_device_state_simple, map_device_type, map_wifi_security, decode_ssid, NM_DEVICE_TYPE_ETHERNET, NM_DEVICE_TYPE_WIFI, NM_DEVICE_TYPE_WIREGUARD},
+    mapping::{
+        map_device_state_simple, map_device_type, map_wifi_security, decode_ssid,
+        NM_DEVICE_TYPE_ETHERNET, NM_DEVICE_TYPE_WIFI, NM_DEVICE_TYPE_WIREGUARD
+    },
+    settings::{NmOptionsMap, NmRoot},
     wireless::NmWirelessDevice,
 };
 
@@ -275,15 +281,167 @@ impl NetworkBackend for NetworkManagerBackend {
         Ok(result)
     }
 
-    async fn connect_wifi(&self, _request: WifiConnectRequest) -> Result<(), ConnectivityError> {
-        Err(ConnectivityError::Unsupported)
+    async fn connect_wifi(&self, request: WifiConnectRequest) -> Result<(), ConnectivityError> {
+        let conn = self.connection().await?;
+        let manager = NmManager::new(&conn)
+            .await
+            .map_err(map_zbus_err)?;
+        let root = NmRoot::new(&conn)
+            .await
+            .map_err(map_zbus_err)?;
+
+        let device_paths = manager
+            .get_devices()
+            .await
+            .map_err(map_zbus_err)?;
+
+        let mut target_device_path: Option<OwnedObjectPath> = None;
+        let mut target_interface_name: Option<OwnedObjectPath> = None;
+        let mut target_ap_path: Option<OwnedObjectPath> = None;
+
+        for path in device_paths {
+            let dev = NmDevice::new(&conn, path.clone())
+                .await
+                .map_err(map_zbus_err)?;
+
+            let iface = dev
+                .interface()
+                .await
+                .map_err(map_zbus_err)?;
+
+            let device_type = dev
+                .device_type()
+                .await
+                .map_err(map_zbus_err)?;
+
+            if device_type != NM_DEVICE_TYPE_WIFI {
+                continue;
+            }
+
+            if let Some(target_if) = &request.interface_id {
+                if &iface != target_if {
+                    continue;
+                }
+            }
+
+            let wifi = NmWirelessDevice::new(&conn, path.clone())
+                .await
+                .map_err(map_zbus_err)?;
+
+            let ap_paths = match wifi.all_access_points().await {
+                Ok(paths) => paths,
+                Err(_) => wifi
+                    .access_points()
+                    .await
+                    .map_err(map_zbus_err)?,
+            };
+
+            for ap_path in ap_paths {
+                let ap = NmAccessPoint::new(&conn, ap_path.clone())
+                    .await
+                    .map_err(map_zbus_err)?;
+
+                let ssid = decode_ssid(
+                    ap.ssid()
+                        .await
+                        .map_err(map_zbus_err)?,
+                );
+
+                if ssid == request.ssid {
+                    target_device_path = Some(ap_path.clone());
+                    target_interface_name = Some(ap_path.clone());
+                    target_ap_path = Some(ap_path.clone());
+                    break;
+                }
+            }
+
+            if target_ap_path.is_some() {
+                break;
+            }
+        }
+
+        let device_path = target_device_path.ok_or(ConnectivityError::InterfaceNotFound)?;
+        let ap_path = target_ap_path.ok_or(ConnectivityError::NetworkNotFound)?;
+
+        let settings =
+            build_wifi_connection_settings(&request, target_interface_name.as_deref());
+
+        let mut options = NmOptionsMap::new();
+        options.insert("persist".to_string(), ov("disk".to_string()));
+
+        let _reply = root
+            .add_and_activate_connection2(settings, device_path, ap_path, options)
+            .await
+            .map_err(map_zbus_err)?;
+
+        Ok(())
     }
 
     async fn disconnect_wifi(
         &self,
-        _interface_id: Option<&str>,
+        interface_id: Option<&str>,
     ) -> Result<(), ConnectivityError> {
-        Err(ConnectivityError::Unsupported)
+        let conn = self.connection().await?;
+        let manager = NmManager::new(&conn)
+            .await
+            .map_err(map_zbus_err)?;
+        let root = NmRoot::new(&conn)
+            .await
+            .map_err(map_zbus_err)?;
+
+        let device_paths = manager
+            .get_devices()
+            .await
+            .map_err(map_zbus_err)?;
+
+        let mut found_wifi_device = false;
+
+        for path in device_paths {
+            let dev = NmDevice::new(&conn, path)
+                .await
+                .map_err(map_zbus_err)?;
+
+            let iface = dev
+                .interface()
+                .await
+                .map_err(map_zbus_err)?;
+
+            let device_type = dev
+                .device_type()
+                .await
+                .map_err(map_zbus_err)?;
+
+            if device_type != NM_DEVICE_TYPE_WIFI {
+                continue;
+            }
+
+            if let Some(target_if) = interface_id {
+                if iface != target_if {
+                    continue;
+                }
+            }
+
+            found_wifi_device = true;
+
+            let active_connection = dev
+                .active_connection()
+                .await
+                .map_err(map_zbus_err)?;
+
+            if !is_root_path(&active_connection) {
+                root.deactivate_connection(active_connection)
+                    .await
+                    .map_err(map_zbus_err)?;
+            }
+
+            return Ok(());
+        }
+
+        if !found_wifi_device {
+            return Err(ConnectivityError::InterfaceNotFound);
+        }
+
+        Ok(())
     }
 
     async fn list_saved_wifi_networks(

@@ -305,6 +305,7 @@ dependencies = [
  "connectivity-backend",
  "connectivity-domain",
  "tracing",
+ "uuid",
  "zbus",
 ]
 
