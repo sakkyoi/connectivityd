@@ -38,3 +38,7 @@ pub fn map_wifi_security(flags: u32, wpa_flags: u32, rsn_flags: u32) -> WifiSecu
         (_, true, true) => WifiSecurity::Wpa2, // conservative, need to categorize into WPA3/SAE
     }
 }
+
+pub fn decode_ssid(bytes: Vec<u8>) -> String {
+    String::from_utf8_lossy(&bytes).to_string()
+}

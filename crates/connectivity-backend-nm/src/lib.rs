@@ -17,9 +17,13 @@ use nm::{
     access_point::NmAccessPoint,
     device::NmDevice,
     manager::NmManager,
-    mapping::{map_device_state_simple, map_device_type, map_wifi_security},
+    mapping::{map_device_state_simple, map_device_type, map_wifi_security, decode_ssid, NM_DEVICE_TYPE_ETHERNET, NM_DEVICE_TYPE_WIFI, NM_DEVICE_TYPE_WIREGUARD},
     wireless::NmWirelessDevice,
 };
+
+pub fn map_zbus_err(e: zbus::Error) -> ConnectivityError {
+    ConnectivityError::BackendFailure(e.to_string())
+}
 
 pub struct NetworkManagerBackend;
 
@@ -31,7 +35,7 @@ impl NetworkManagerBackend {
     pub async fn connection(&self) -> Result<Connection, ConnectivityError> {
         Connection::system()
             .await
-            .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))
+            .map_err(map_zbus_err)
     }
 }
 
@@ -41,41 +45,41 @@ impl NetworkBackend for NetworkManagerBackend {
         let conn = self.connection().await?;
         let manager = NmManager::new(&conn)
             .await
-            .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+            .map_err(map_zbus_err)?;
 
         let device_paths = manager
             .get_devices()
             .await
-            .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+            .map_err(map_zbus_err)?;
 
         let mut result = Vec::new();
 
         for path in device_paths {
             let dev = NmDevice::new(&conn, path)
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
             let id = dev
                 .interface()
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
             let kind = map_device_type(
                 dev.device_type()
                     .await
-                    .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?,
+                    .map_err(map_zbus_err)?,
             );
 
             let state = map_device_state_simple(
                 dev.state()
                     .await
-                    .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?,
+                    .map_err(map_zbus_err)?,
             );
 
             let enabled = dev
                 .managed()
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
             let mac_address = dev.hw_address().await.ok();
 
@@ -127,29 +131,31 @@ impl NetworkBackend for NetworkManagerBackend {
         let conn = self.connection().await?;
         let manager = NmManager::new(&conn)
             .await
-            .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+            .map_err(map_zbus_err)?;
 
         let device_paths = manager
             .get_devices()
             .await
-            .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+            .map_err(map_zbus_err)?;
+
+        let mut triggered = false;
 
         for path in device_paths {
             let dev = NmDevice::new(&conn, path.clone())
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
             let interface = dev
                 .interface()
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
             let device_type = dev
                 .device_type()
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
-            if device_type != 2 {
+            if device_type != NM_DEVICE_TYPE_WIFI {
                 continue;
             }
 
@@ -159,13 +165,19 @@ impl NetworkBackend for NetworkManagerBackend {
                 }
             }
 
+            triggered = true;
+
             let wifi = NmWirelessDevice::new(&conn, path)
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
             wifi.request_scan()
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
+        }
+
+        if !triggered {
+            return Err(ConnectivityError::InterfaceNotFound);
         }
 
         Ok(())
@@ -178,31 +190,31 @@ impl NetworkBackend for NetworkManagerBackend {
         let conn = self.connection().await?;
         let manager = NmManager::new(&conn)
             .await
-            .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+            .map_err(map_zbus_err)?;
 
         let device_paths = manager
             .get_devices()
             .await
-            .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+            .map_err(map_zbus_err)?;
 
         let mut result = Vec::new();
 
         for path in device_paths {
             let dev = NmDevice::new(&conn, path.clone())
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
             let iface = dev
                 .interface()
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
             let device_type = dev
                 .device_type()
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
-            if device_type != 2 {
+            if device_type != NM_DEVICE_TYPE_WIFI {
                 continue;
             }
 
@@ -214,7 +226,7 @@ impl NetworkBackend for NetworkManagerBackend {
 
             let wifi = NmWirelessDevice::new(&conn, path)
                 .await
-                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                .map_err(map_zbus_err)?;
 
             let active_ap = wifi.active_access_point().await.ok();
             let ap_paths = match wifi.all_access_points().await {
@@ -222,36 +234,40 @@ impl NetworkBackend for NetworkManagerBackend {
                 Err(_) => wifi
                     .access_points()
                     .await
-                    .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?,
+                    .map_err(map_zbus_err)?,
             };
 
             for ap_path in ap_paths {
                 let ap = NmAccessPoint::new(&conn, ap_path.clone())
                     .await
-                    .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                    .map_err(map_zbus_err)?;
 
-                let ssid = String::from_utf8_lossy(
-                    &ap.ssid()
+                let ssid = decode_ssid(
+                    ap.ssid()
                         .await
-                        .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?,
-                )
-                    .to_string();
+                        .map_err(map_zbus_err)?,
+                );
 
                 let strength = ap
                     .strength()
                     .await
-                    .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+                    .map_err(map_zbus_err)?;
 
                 let flags = ap.flags().await.unwrap_or(0);
                 let wpa_flags = ap.wpa_flags().await.unwrap_or(0);
                 let rsn_flags = ap.rsn_flags().await.unwrap_or(0);
 
+                let is_connected = active_ap
+                    .as_ref()
+                    .map(|p| p == &ap_path)
+                    .unwrap_or(false);
+
                 result.push(WifiNetwork {
-                    id: format!("{iface}:{ssid}"),
+                    id: ap_path.to_string(),
                     ssid,
                     signal_strength: strength,
                     security: map_wifi_security(flags, wpa_flags, rsn_flags),
-                    connected: active_ap.as_ref() == Some(&ap_path),
+                    connected: is_connected,
                 });
             }
         }
