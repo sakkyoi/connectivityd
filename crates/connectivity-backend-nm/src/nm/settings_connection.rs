@@ -16,8 +16,8 @@ impl<'a> NmSettings<'a> {
         let proxy = Proxy::new(
             conn,
             "org.freedesktop.NetworkManager",
-            "/org/freedesktop/NetworkManager",
-            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager/Settings",
+            "org.freedesktop.NetworkManager.Settings",
         )
             .await?;
 
