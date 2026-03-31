@@ -19,6 +19,7 @@ pub struct WifiNetwork {
     pub signal_strength: u8,
     pub security: WifiSecurity,
     pub connected: bool,
+    pub saved: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

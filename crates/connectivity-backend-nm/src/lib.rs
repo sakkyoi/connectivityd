@@ -21,9 +21,10 @@ use nm::{
     manager::NmManager,
     mapping::{
         map_device_state_simple, map_device_type, map_wifi_security, decode_ssid,
-        NM_DEVICE_TYPE_WIFI,
+        owned_value_to_bytes, owned_value_to_string, NM_DEVICE_TYPE_WIFI,
     },
     settings::{NmOptionsMap, NmRoot},
+    settings_connection::{NmSettings, NmSettingsConnection},
     wireless::NmWirelessDevice,
 };
 
@@ -193,6 +194,11 @@ impl NetworkBackend for NetworkManagerBackend {
         &self,
         interface_id: Option<&str>,
     ) -> Result<Vec<WifiNetwork>, ConnectivityError> {
+        let saved_networks = self
+            .list_saved_wifi_networks(interface_id)
+            .await
+            .unwrap_or_default();
+
         let conn = self.connection().await?;
         let manager = NmManager::new(&conn)
             .await
@@ -268,12 +274,17 @@ impl NetworkBackend for NetworkManagerBackend {
                     .map(|p| p == &ap_path)
                     .unwrap_or(false);
 
+                let is_saved = saved_networks
+                    .iter()
+                    .any(|n| n.ssid == ssid);
+
                 result.push(WifiNetwork {
                     id: ap_path.to_string(),
                     ssid,
                     signal_strength: strength,
                     security: map_wifi_security(flags, wpa_flags, rsn_flags),
                     connected: is_connected,
+                    saved: is_saved,
                 });
             }
         }
@@ -433,14 +444,74 @@ impl NetworkBackend for NetworkManagerBackend {
             return Ok(());
         }
 
-        return Err(ConnectivityError::InterfaceNotFound);
+        Err(ConnectivityError::InterfaceNotFound)
     }
 
     async fn list_saved_wifi_networks(
         &self,
-        _interface_id: Option<&str>,
+        interface_id: Option<&str>,
     ) -> Result<Vec<SavedWifiNetwork>, ConnectivityError> {
-        Err(ConnectivityError::Unsupported)
+        let conn = self.connection().await?;
+        let settings = NmSettings::new(&conn)
+            .await
+            .map_err(map_zbus_err)?;
+
+        let connection_paths = settings
+            .list_connections()
+            .await
+            .map_err(map_zbus_err)?;
+
+        let mut result = Vec::new();
+
+        for path in connection_paths {
+            let profile = NmSettingsConnection::new(&conn, path)
+                .await
+                .map_err(map_zbus_err)?;
+
+            let settings_map = profile
+                .get_settings()
+                .await
+                .map_err(map_zbus_err)?;
+
+            let Some(connection_section) = settings_map.get("connection") else {
+                continue;
+            };
+
+            let Some(conn_type) = connection_section
+                .get("type")
+                .and_then(owned_value_to_string)
+            else {
+                continue;
+            };
+
+            if conn_type != "802-11-wireless" {
+                continue;
+            }
+
+            let Some(wifi_section) = settings_map.get("802-11-wireless") else {
+                continue;
+            };
+
+            let ssid = wifi_section
+                .get("ssid")
+                .and_then(owned_value_to_bytes)
+                .map(decode_ssid)
+                .unwrap_or_default();
+
+            if ssid.is_empty() {
+                continue;
+            }
+
+            let id = connection_section
+                .get("uuid")
+                .and_then(owned_value_to_string)
+                .or_else(|| connection_section.get("id").and_then(owned_value_to_string))
+                .unwrap_or_else(|| ssid.clone());
+
+            result.push(SavedWifiNetwork { id, ssid });
+        }
+
+        Ok(result)
     }
 
     async fn forget_wifi_network(&self, _network_id: &str) -> Result<(), ConnectivityError> {

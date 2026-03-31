@@ -1,10 +1,11 @@
 pub mod access_point;
+pub mod active_connection;
+pub mod connection_builder;
 pub mod device;
 pub mod ip4_config;
 pub mod ip6_config;
 pub mod manager;
 pub mod mapping;
-pub mod wireless;
 pub mod settings;
-pub mod active_connection;
-pub mod connection_builder;
+pub mod settings_connection;
+pub mod wireless;

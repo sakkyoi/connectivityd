@@ -2,6 +2,7 @@ use connectivity_domain::network::{
     common::{InterfaceState, NetworkInterfaceKind},
     wifi::WifiSecurity,
 };
+use zbus::zvariant::OwnedValue;
 
 pub const NM_DEVICE_TYPE_ETHERNET: u32 = 1;
 pub const NM_DEVICE_TYPE_WIFI: u32 = 2;
@@ -41,4 +42,12 @@ pub fn map_wifi_security(flags: u32, wpa_flags: u32, rsn_flags: u32) -> WifiSecu
 
 pub fn decode_ssid(bytes: Vec<u8>) -> String {
     String::from_utf8_lossy(&bytes).to_string()
+}
+
+pub fn owned_value_to_string(value: &OwnedValue) -> Option<String> {
+    value.try_clone().ok()?.try_into().ok()
+}
+
+pub fn owned_value_to_bytes(value: &OwnedValue) -> Option<Vec<u8>> {
+    value.try_clone().ok()?.try_into().ok()
 }

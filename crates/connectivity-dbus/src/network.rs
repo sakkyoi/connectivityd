@@ -4,7 +4,7 @@ use connectivity_app::context::AppContext;
 use connectivity_domain::network::{
     common::NetworkInterfaceKind,
     interface::NetworkInterface,
-    wifi::{WifiConnectRequest, WifiNetwork, WifiScanRequest, WifiSecurity},
+    wifi::{WifiConnectRequest, WifiNetwork, SavedWifiNetwork, WifiScanRequest, WifiSecurity},
 };
 use serde::{Deserialize, Serialize};
 use zbus::{fdo, interface, zvariant::{Type, Optional}};
@@ -51,6 +51,7 @@ pub struct WifiNetworkDto {
     pub signal_strength: u8,
     pub security: String,
     pub connected: bool,
+    pub saved: bool,
 }
 
 impl From<WifiNetwork> for WifiNetworkDto {
@@ -71,6 +72,22 @@ impl From<WifiNetwork> for WifiNetworkDto {
             signal_strength: value.signal_strength,
             security,
             connected: value.connected,
+            saved: value.saved,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SavedWifiNetworkDto {
+    pub id: String,
+    pub ssid: String,
+}
+
+impl From<SavedWifiNetwork> for SavedWifiNetworkDto {
+    fn from(value: SavedWifiNetwork) -> Self {
+        Self {
+            id: value.id,
+            ssid: value.ssid,
         }
     }
 }
@@ -176,6 +193,28 @@ impl WifiObject {
         self.ctx
             .network
             .disconnect_wifi(interface_id.as_deref())
+            .await
+            .map_err(map_domain_error)
+    }
+
+    async fn list_saved_wifi_networks(
+        &self,
+        interface_id: Optional<String>,
+    ) -> fdo::Result<Vec<SavedWifiNetworkDto>> {
+        let networks = self
+            .ctx
+            .network
+            .list_saved_wifi_profiles(interface_id.as_deref())
+            .await
+            .map_err(map_domain_error)?;
+
+        Ok(networks.into_iter().map(Into::into).collect())
+    }
+
+    async fn forget_wifi_network(&self, network_id: &str) -> fdo::Result<()> {
+        self.ctx
+            .network
+            .forget_wifi_network(&network_id)
             .await
             .map_err(map_domain_error)
     }
