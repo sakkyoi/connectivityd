@@ -8,6 +8,7 @@ members = [
     "crates/connectivity-events",
     "crates/connectivity-app",
     "crates/connectivity-backend-nm",
+    "crates/connectivity-backend-nmrs",
     "crates/connectivity-backend-bluez",
     "crates/connectivity-dbus",
     "crates/connectivity-http",
@@ -33,3 +34,4 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 zbus = "5"
+nmrs = "2"
