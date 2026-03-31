@@ -380,19 +380,51 @@ impl NetworkBackend for NetworkManagerBackend {
 
         let existing = saved.into_iter().find(|n| n.ssid == request.ssid);
 
-        if request.passphrase.as_deref().is_none_or(|p| p.is_empty()) {
-            if let Some(existing) = existing {
-                if let Some(path) = existing.connection_path {
-                    let connection_path = OwnedObjectPath::try_from(path)
-                        .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+        if let Some(existing) = existing {
+            let connection_path = existing
+                .connection_path
+                .ok_or_else(|| ConnectivityError::BackendFailure("missing connection_path".into()))?;
 
-                    root.activate_connection(connection_path, device_path, ap_path)
+            let connection_path = OwnedObjectPath::try_from(connection_path)
+                .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+
+            // if there is new passphrase provided, update profile
+            if let Some(passphrase) = request.passphrase.as_deref() {
+                if !passphrase.is_empty() {
+                    let profile = NmSettingsConnection::new(&conn, connection_path.clone())
                         .await
                         .map_err(map_zbus_err)?;
 
-                    return Ok(())
+                    let mut settings = profile
+                        .get_settings()
+                        .await
+                        .map_err(map_zbus_err)?;
+
+                    let sec = settings
+                        .entry("802-11-wireless-security".to_string())
+                        .or_default();
+
+                    sec.insert(
+                        "key-mgmt".to_string(),
+                        ov("wpa-psk".to_string()),
+                    );
+                    sec.insert(
+                        "psk".to_string(),
+                        ov(passphrase.to_string()),
+                    );
+
+                    profile
+                        .update(settings)
+                        .await
+                        .map_err(map_zbus_err)?;
                 }
             }
+
+            root.activate_connection(connection_path, device_path, ap_path)
+                .await
+                .map_err(map_zbus_err)?;
+
+            return Ok(())
         }
 
         let settings = build_wifi_connection_settings(&request, Some(&iface));

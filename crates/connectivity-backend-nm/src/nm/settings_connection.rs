@@ -50,6 +50,11 @@ impl<'a> NmSettingsConnection<'a> {
         self.proxy.call("GetSettings", &()).await
     }
 
+    pub async fn update(&self, settings: NmConnectionSettings) -> zbus::Result<()> {
+        let _: () = self.proxy.call("Update", &(settings)).await?;
+        Ok(())
+    }
+
     pub async fn delete(&self) -> zbus::Result<()> {
         let _: () = self.proxy.call("Delete", &()).await?;
         Ok(())
