@@ -11,7 +11,7 @@ use connectivity_domain::{
     },
     ConnectivityError,
 };
-use zbus::{zvariant::{OwnedObjectPath, OwnedValue}, Connection};
+use zbus::{zvariant::OwnedObjectPath, Connection};
 
 use nm::{
     access_point::NmAccessPoint,
@@ -21,7 +21,7 @@ use nm::{
     manager::NmManager,
     mapping::{
         map_device_state_simple, map_device_type, map_wifi_security, decode_ssid,
-        NM_DEVICE_TYPE_ETHERNET, NM_DEVICE_TYPE_WIFI, NM_DEVICE_TYPE_WIREGUARD
+        NM_DEVICE_TYPE_WIFI,
     },
     settings::{NmOptionsMap, NmRoot},
     wireless::NmWirelessDevice,
@@ -296,7 +296,7 @@ impl NetworkBackend for NetworkManagerBackend {
             .map_err(map_zbus_err)?;
 
         let mut target_device_path: Option<OwnedObjectPath> = None;
-        let mut target_interface_name: Option<OwnedObjectPath> = None;
+        let mut target_interface_name: Option<String> = None;
         let mut target_ap_path: Option<OwnedObjectPath> = None;
 
         for path in device_paths {
@@ -348,8 +348,8 @@ impl NetworkBackend for NetworkManagerBackend {
                 );
 
                 if ssid == request.ssid {
-                    target_device_path = Some(ap_path.clone());
-                    target_interface_name = Some(ap_path.clone());
+                    target_device_path = Some(path.clone());
+                    target_interface_name = Some(iface.clone());
                     target_ap_path = Some(ap_path.clone());
                     break;
                 }

@@ -6,7 +6,7 @@ use connectivity_domain::network::{
     wifi::WifiConnectRequest,
 };
 use uuid::Uuid;
-use zbus::zvariant::{OwnedValue, Value, ObjectPath};
+use zbus::zvariant::{OwnedValue, Value};
 
 use crate::nm::settings::NmSettingsMap;
 
@@ -18,7 +18,7 @@ where
         .unwrap_or_else(|e| panic!("failed to convert to OwnedValue: {e}"))
 }
 
-fn build_connection_section(id: &str, interface_name: Option<&ObjectPath>) -> HashMap<String, OwnedValue> {
+fn build_connection_section(id: &str, interface_name: Option<&str>) -> HashMap<String, OwnedValue> {
     let mut section = HashMap::new();
     section.insert("id".to_string(), ov(id.to_string()));
     section.insert("type".to_string(), ov("802-11-wireless".to_string()));
@@ -146,7 +146,7 @@ fn build_ipv6_section(ipv6: Option<&Ipv6Config>) -> HashMap<String, OwnedValue> 
 
 pub fn build_wifi_connection_settings(
     req: &WifiConnectRequest,
-    interface_name: Option<&ObjectPath>,
+    interface_name: Option<&str>,
 ) -> NmSettingsMap {
     let mut settings = NmSettingsMap::new();
 
