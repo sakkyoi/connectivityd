@@ -1,3 +1,5 @@
+mod mapping;
+
 use async_trait::async_trait;
 use connectivity_backend::network::NetworkBackend;
 use connectivity_domain::{
@@ -9,9 +11,9 @@ use connectivity_domain::{
     },
     ConnectivityError,
 };
-use nmrs::NetworkManager;
+use nmrs::{NetworkManager, ConnectionError};
 
-pub fn map_zbus_err(e: ConnectivityError) -> ConnectivityError {
+pub fn map_zbus_err(e: ConnectionError) -> ConnectivityError {
     ConnectivityError::BackendFailure(e.to_string())
 }
 
@@ -32,10 +34,34 @@ impl NetworkManagerBackend {
 #[async_trait]
 impl NetworkBackend for NetworkManagerBackend {
     async fn list_interfaces(&self) -> Result<Vec<NetworkInterface>, ConnectivityError> {
-        // let manager = self
-        //     .manager()
-        //     .await?;
-        Err(ConnectivityError::Unsupported)
+        let manager = self
+            .manager()
+            .await?;
+
+        let devices = manager
+            .list_devices()
+            .await
+            .map_err(map_zbus_err)?;
+
+        let mut result = Vec::new();
+
+        for device in devices {
+            let id = device.interface;
+            let kind = device.device_type;
+            let state = device.state;
+            let enabled = device.managed.unwrap_or(false);
+            let mac_address = device.identity;
+            // result.push(NetworkInterface {
+            //     id: id.clone().into(),
+            //     name: id.into(),
+            //     kind: kind.into(),
+            //     state: state.into(),
+            //     enabled,
+            //     mac_address: mac_address.into(),
+            // });
+        }
+
+        Ok(result)
     }
 
     async fn get_interface(&self, interface_id: &str) -> Result<NetworkInterface, ConnectivityError> {
