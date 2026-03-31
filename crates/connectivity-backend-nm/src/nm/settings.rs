@@ -25,6 +25,18 @@ impl<'a> NmRoot<'a> {
         Ok(Self { proxy })
     }
 
+    /// https://networkmanager.dev/docs/api/latest/gdbus-org.freedesktop.NetworkManager.html#gdbus-method-org-freedesktop-NetworkManager.ActivateConnection
+    pub async fn activate_connection(
+        &self,
+        connection: OwnedObjectPath,
+        device: OwnedObjectPath,
+        specific_object: OwnedObjectPath,
+    ) -> zbus::Result<OwnedObjectPath> {
+        self.proxy
+            .call("ActivateConnection", &(connection, device, specific_object))
+            .await
+    }
+
     /// https://networkmanager.dev/docs/api/latest/gdbus-org.freedesktop.NetworkManager.html#gdbus-method-org-freedesktop-NetworkManager.AddAndActivateConnection2
     pub async fn add_and_activate_connection2(
         &self,

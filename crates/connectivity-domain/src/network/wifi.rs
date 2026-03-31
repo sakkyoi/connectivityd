@@ -40,4 +40,5 @@ pub struct WifiConnectRequest {
 pub struct SavedWifiNetwork {
     pub id: String,
     pub ssid: String,
+    pub connection_path: Option<String>,
 }

@@ -301,87 +301,109 @@ impl NetworkBackend for NetworkManagerBackend {
             .await
             .map_err(map_zbus_err)?;
 
-        let device_paths = manager
-            .get_devices()
-            .await
-            .map_err(map_zbus_err)?;
-
-        let mut target_device_path: Option<OwnedObjectPath> = None;
-        let mut target_interface_name: Option<String> = None;
-        let mut target_ap_path: Option<OwnedObjectPath> = None;
-
-        for path in device_paths {
-            let dev = NmDevice::new(&conn, path.clone())
+        let device_path = if let Some(interface_id) = request.interface_id.clone() {
+            manager
+                .get_device_by_ip_iface(&interface_id)
+                .await
+                .map_err(map_zbus_err)?
+        } else {
+            let device_paths = manager
+                .get_devices()
                 .await
                 .map_err(map_zbus_err)?;
 
-            let iface = dev
-                .interface()
-                .await
-                .map_err(map_zbus_err)?;
-
-            let device_type = dev
-                .device_type()
-                .await
-                .map_err(map_zbus_err)?;
-
-            if device_type != NM_DEVICE_TYPE_WIFI {
-                continue;
-            }
-
-            if let Some(target_if) = &request.interface_id {
-                if &iface != target_if {
-                    continue;
-                }
-            }
-
-            let wifi = NmWirelessDevice::new(&conn, path.clone())
-                .await
-                .map_err(map_zbus_err)?;
-
-            let ap_paths = match wifi.all_access_points().await {
-                Ok(paths) => paths,
-                Err(_) => wifi
-                    .access_points()
-                    .await
-                    .map_err(map_zbus_err)?,
-            };
-
-            for ap_path in ap_paths {
-                let ap = NmAccessPoint::new(&conn, ap_path.clone())
+            let mut found = None;
+            for path in device_paths {
+                let dev = NmDevice::new(&conn, path.clone())
                     .await
                     .map_err(map_zbus_err)?;
 
-                let ssid = decode_ssid(
-                    ap.ssid()
-                        .await
-                        .map_err(map_zbus_err)?,
-                );
+                let device_type = dev
+                    .device_type()
+                    .await
+                    .map_err(map_zbus_err)?;
 
-                if ssid == request.ssid {
-                    target_device_path = Some(path.clone());
-                    target_interface_name = Some(iface.clone());
-                    target_ap_path = Some(ap_path.clone());
+                if device_type == NM_DEVICE_TYPE_WIFI {
+                    found = Some(path);
                     break;
                 }
             }
 
-            if target_ap_path.is_some() {
+            found.ok_or(ConnectivityError::InterfaceNotFound)?
+        };
+
+        let dev = NmDevice::new(&conn, device_path.clone())
+            .await
+            .map_err(map_zbus_err)?;
+
+        let iface = dev
+            .interface()
+            .await
+            .map_err(map_zbus_err)?;
+
+        let wifi = NmWirelessDevice::new(&conn, device_path.clone())
+            .await
+            .map_err(map_zbus_err)?;
+
+        let ap_paths = match wifi.all_access_points().await {
+            Ok(paths) => paths,
+            Err(_) => wifi
+                .access_points()
+                .await
+                .map_err(map_zbus_err)?,
+        };
+
+        let mut target_ap_paths = None;
+        for ap_path in ap_paths {
+            let ap = NmAccessPoint::new(&conn, ap_path.clone())
+                .await
+                .map_err(map_zbus_err)?;
+
+            let ssid = decode_ssid(
+                ap.ssid()
+                    .await
+                    .map_err(map_zbus_err)?,
+            );
+
+            if ssid == request.ssid {
+                target_ap_paths = Some(ap_path);
                 break;
             }
         }
 
-        let device_path = target_device_path.ok_or(ConnectivityError::InterfaceNotFound)?;
-        let ap_path = target_ap_path.ok_or(ConnectivityError::NetworkNotFound)?;
+        let ap_path = target_ap_paths.ok_or(ConnectivityError::NetworkNotFound)?;
 
-        let settings =
-            build_wifi_connection_settings(&request, target_interface_name.as_deref());
+        let saved = self
+            .list_saved_wifi_networks(Some(&iface))
+            .await
+            .unwrap_or_default();
+
+        let existing = saved.into_iter().find(|n| n.ssid == request.ssid);
+
+        if request.passphrase.as_deref().is_none_or(|p| p.is_empty()) {
+            if let Some(existing) = existing {
+                if let Some(path) = existing.connection_path {
+                    let connection_path = OwnedObjectPath::try_from(path)
+                        .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))?;
+
+                    root.activate_connection(connection_path, device_path, ap_path)
+                        .await
+                        .map_err(map_zbus_err)?;
+
+                    return Ok(())
+                }
+            }
+        }
+
+        let settings = build_wifi_connection_settings(&request, Some(&iface));
 
         let mut options = NmOptionsMap::new();
-        options.insert("persist".to_string(), ov("disk".to_string()));
+        options.insert(
+            "persist".to_string(),
+            ov("disk".to_string()),
+        );
 
-        let _reply = root
-            .add_and_activate_connection2(settings, device_path, ap_path, options)
+        root.add_and_activate_connection2(settings, device_path, ap_path, options)
             .await
             .map_err(map_zbus_err)?;
 
@@ -464,7 +486,7 @@ impl NetworkBackend for NetworkManagerBackend {
         let mut result = Vec::new();
 
         for path in connection_paths {
-            let profile = NmSettingsConnection::new(&conn, path)
+            let profile = NmSettingsConnection::new(&conn, path.clone())
                 .await
                 .map_err(map_zbus_err)?;
 
@@ -508,7 +530,11 @@ impl NetworkBackend for NetworkManagerBackend {
                 .or_else(|| connection_section.get("id").and_then(owned_value_to_string))
                 .unwrap_or_else(|| ssid.clone());
 
-            result.push(SavedWifiNetwork { id, ssid });
+            result.push(SavedWifiNetwork {
+                id,
+                ssid,
+                connection_path: Some(path.to_string())
+            });
         }
 
         Ok(result)

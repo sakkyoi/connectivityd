@@ -20,4 +20,14 @@ impl<'a> NmManager<'a> {
     pub async fn get_devices(&self) -> zbus::Result<Vec<OwnedObjectPath>> {
         self.proxy.get_property("Devices").await
     }
+
+    /// https://networkmanager.dev/docs/api/latest/gdbus-org.freedesktop.NetworkManager.html#gdbus-method-org-freedesktop-NetworkManager.GetDeviceByIpIface
+    pub async fn get_device_by_ip_iface(
+        &self,
+        iface: &str,
+    ) -> zbus::Result<OwnedObjectPath> {
+        self.proxy
+            .call("GetDeviceByIpIface", &(iface))
+            .await
+    }
 }
