@@ -4,7 +4,7 @@ use connectivity_app::context::AppContext;
 use connectivity_domain::network::{
     common::NetworkInterfaceKind,
     interface::NetworkInterface,
-    wifi::{WifiNetwork, WifiScanRequest, WifiSecurity},
+    wifi::{WifiConnectRequest, WifiNetwork, WifiScanRequest, WifiSecurity},
 };
 use serde::{Deserialize, Serialize};
 use zbus::{fdo, interface, zvariant::{Type, Optional}};
@@ -151,5 +151,32 @@ impl WifiObject {
             .map_err(map_domain_error)?;
 
         Ok(networks.into_iter().map(Into::into).collect())
+    }
+
+    async fn connect_wifi(
+        &self,
+        interface_id: Optional<String>,
+        ssid: String,
+        passphrase: Optional<String>,
+    ) -> fdo::Result<()> {
+        self.ctx
+            .network
+            .connect_wifi(WifiConnectRequest {
+                interface_id: interface_id.into(),
+                ssid,
+                passphrase: passphrase.into(),
+                ipv4: None,
+                ipv6: None,
+            })
+            .await
+            .map_err(map_domain_error)
+    }
+
+    async fn disconnect_wifi(&self, interface_id: Optional<String>) -> fdo::Result<()> {
+        self.ctx
+            .network
+            .disconnect_wifi(interface_id.as_deref())
+            .await
+            .map_err(map_domain_error)
     }
 }

@@ -394,8 +394,6 @@ impl NetworkBackend for NetworkManagerBackend {
             .await
             .map_err(map_zbus_err)?;
 
-        let mut found_wifi_device = false;
-
         for path in device_paths {
             let dev = NmDevice::new(&conn, path)
                 .await
@@ -421,8 +419,6 @@ impl NetworkBackend for NetworkManagerBackend {
                 }
             }
 
-            found_wifi_device = true;
-
             let active_connection = dev
                 .active_connection()
                 .await
@@ -437,11 +433,7 @@ impl NetworkBackend for NetworkManagerBackend {
             return Ok(());
         }
 
-        if !found_wifi_device {
-            return Err(ConnectivityError::InterfaceNotFound);
-        }
-
-        Ok(())
+        return Err(ConnectivityError::InterfaceNotFound);
     }
 
     async fn list_saved_wifi_networks(
