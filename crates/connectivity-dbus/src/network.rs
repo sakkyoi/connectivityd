@@ -4,7 +4,9 @@ use connectivity_app::context::AppContext;
 use connectivity_domain::network::{
     common::NetworkInterfaceKind,
     interface::NetworkInterface,
-    wifi::{WifiConnectRequest, WifiNetwork, SavedWifiNetwork, WifiScanRequest, WifiSecurity},
+    ip::{IpAssignment, Ipv4Config, Ipv6Address, Ipv6Config},
+    vpn::{ConnectVpnRequest, VpnKind, VpnProfile, VpnStatus},
+    wifi::{SavedWifiNetwork, WifiConnectRequest, WifiNetwork, WifiSecurity},
 };
 use serde::{Deserialize, Serialize};
 use zbus::{fdo, interface, zvariant::{Type, Optional}};
@@ -125,14 +127,6 @@ impl NetworkObject {
 
         Ok(iface.into())
     }
-
-    async fn set_interface_enabled(&self, interface_id: String, enabled: bool) -> fdo::Result<()> {
-        self.ctx
-            .network
-            .set_interface_enabled(&interface_id, enabled)
-            .await
-            .map_err(map_domain_error)
-    }
 }
 
 pub struct WifiObject {
@@ -147,15 +141,6 @@ impl WifiObject {
 
 #[interface(name = "com.example.Connectivity.Network.WiFi1")]
 impl WifiObject {
-    async fn scan_wifi(&self, interface_id: Optional<String>) -> fdo::Result<()> {
-        let interface_id: Option<String> = interface_id.into();
-        self.ctx
-            .network
-            .scan_wifi(WifiScanRequest { interface_id })
-            .await
-            .map_err(map_domain_error)
-    }
-
     async fn list_visible_wifi_networks(
         &self,
         interface_id: Optional<String>,
