@@ -346,6 +346,7 @@ dependencies = [
 name = "connectivity-domain"
 version = "0.1.0"
 dependencies = [
+ "nmrs",
  "serde",
  "thiserror",
  "uuid",

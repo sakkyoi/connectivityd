@@ -51,14 +51,15 @@ impl NetworkBackend for NetworkManagerBackend {
             let state = device.state;
             let enabled = device.managed.unwrap_or(false);
             let mac_address = device.identity;
-            // result.push(NetworkInterface {
-            //     id: id.clone().into(),
-            //     name: id.into(),
-            //     kind: kind.into(),
-            //     state: state.into(),
-            //     enabled,
-            //     mac_address: mac_address.into(),
-            // });
+            result.push(NetworkInterface {
+                id: id.clone().into(),
+                name: id.into(),
+                kind: kind.into(),
+                state: state.into(),
+                carrier: None,
+                enabled,
+                mac_address: mac_address.current_mac.into(),
+            });
         }
 
         Ok(result)
