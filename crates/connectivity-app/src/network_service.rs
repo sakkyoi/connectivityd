@@ -4,10 +4,10 @@ use connectivity_backend::network::NetworkBackend;
 use connectivity_domain::{
     events::{Event, EventSource},
     network::{
-        ethernet::{ApplyEthernetConfigRequest, EthernetConfig},
         interface::NetworkInterface,
+        ip::{Ipv4Config, Ipv6Config},
         vpn::{ConnectVpnRequest, VpnProfile, VpnStatus},
-        wifi::{SavedWifiNetwork, WifiConnectRequest, WifiNetwork, WifiScanRequest},
+        wifi::{SavedWifiNetwork, WifiConnectRequest, WifiNetwork},
     },
     ConnectivityError,
 };
@@ -25,7 +25,7 @@ impl NetworkService {
     }
 
     //
-    // Interface inventory / state
+    // Interface inventory
     //
 
     pub async fn list_interfaces(&self) -> Result<Vec<NetworkInterface>, ConnectivityError> {
@@ -39,74 +39,16 @@ impl NetworkService {
         self.backend.get_interface(interface_id).await
     }
 
-    pub async fn set_interface_enabled(
+    //
+    // Wi-Fi control
+    //
+
+    pub async fn set_wifi_enabled(
         &self,
-        interface_id: &str,
-        enabled: bool,
+        interface_id: Option<&str>,
+        wifi_enabled: bool,
     ) -> Result<(), ConnectivityError> {
-        self.backend
-            .set_interface_enabled(interface_id, enabled)
-            .await?;
-
-        self.events.publish(Event::new(
-            EventSource::Network,
-            "InterfaceEnabledChanged",
-            interface_id.to_string(),
-            format!(r#"{{"enabled":{enabled}}}"#),
-        ));
-
-        Ok(())
-    }
-
-    //
-    // Ethernet
-    //
-
-    pub async fn get_ethernet_config(
-        &self,
-        interface_id: &str,
-    ) -> Result<EthernetConfig, ConnectivityError> {
-        self.backend.get_ethernet_config(interface_id).await
-    }
-
-    pub async fn apply_ethernet_config(
-        &self,
-        request: ApplyEthernetConfigRequest,
-    ) -> Result<(), ConnectivityError> {
-        let interface_id = request.interface_id.clone();
-
-        self.backend.apply_ethernet_config(request).await?;
-
-        self.events.publish(Event::new(
-            EventSource::Network,
-            "EthernetConfigApplied",
-            interface_id,
-            "{}",
-        ));
-
-        Ok(())
-    }
-
-    //
-    // Wi-Fi
-    //
-
-    pub async fn scan_wifi(&self, request: WifiScanRequest) -> Result<(), ConnectivityError> {
-        let interface_id = request
-            .interface_id
-            .clone()
-            .unwrap_or_else(|| "wifi".to_string());
-
-        self.backend.scan_wifi(request).await?;
-
-        self.events.publish(Event::new(
-            EventSource::Network,
-            "WifiScanRequested",
-            interface_id,
-            "{}",
-        ));
-
-        Ok(())
+        self.backend.set_wifi_enabled(interface_id, wifi_enabled).await
     }
 
     pub async fn list_visible_wifi_networks(
@@ -169,6 +111,58 @@ impl NetworkService {
             EventSource::Network,
             "WifiNetworkForgotten",
             network_id.to_string(),
+            "{}",
+        ));
+
+        Ok(())
+    }
+
+    //
+    // IP config
+    //
+
+    pub async fn get_ipv4_config(
+        &self,
+        interface_id: &str,
+    ) -> Result<Option<Ipv4Config>, ConnectivityError> {
+        self.backend.get_ipv4_config(interface_id).await
+    }
+
+    pub async fn set_ipv4_config(
+        &self,
+        interface_id: &str,
+        ipv4_config: Ipv4Config,
+    ) -> Result<(), ConnectivityError> {
+        self.backend.set_ipv4_config(interface_id, ipv4_config).await?;
+
+        self.events.publish(Event::new(
+            EventSource::Network,
+            "Ipv4ConfigUpdated",
+            interface_id.to_string(),
+            "{}",
+        ));
+
+        Ok(())
+    }
+
+    pub async fn get_ipv6_config(
+        &self,
+        interface_id: &str,
+    ) -> Result<Option<Ipv6Config>, ConnectivityError> {
+        self.backend.get_ipv6_config(interface_id).await
+    }
+
+    pub async fn set_ipv6_config(
+        &self,
+        interface_id: &str,
+        config: Ipv6Config,
+    ) -> Result<(), ConnectivityError> {
+        self.backend.set_ipv6_config(interface_id, config).await?;
+
+        self.events.publish(Event::new(
+            EventSource::Network,
+            "Ipv6ConfigUpdated",
+            interface_id.to_string(),
             "{}",
         ));
 

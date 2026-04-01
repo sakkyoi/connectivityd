@@ -23,11 +23,6 @@ pub struct WifiNetwork {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WifiScanRequest {
-    pub interface_id: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WifiConnectRequest {
     pub interface_id: Option<String>,
     pub ssid: String,
