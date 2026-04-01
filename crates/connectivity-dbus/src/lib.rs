@@ -1,7 +1,6 @@
 pub mod error;
 pub mod network;
 pub mod server;
-pub mod ethernet;
 pub mod vpn;
 pub mod bluetooth;
 pub mod advertising;
