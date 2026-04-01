@@ -1,17 +1,20 @@
 mod mapping;
 
+use std::thread::current;
 use async_trait::async_trait;
 use connectivity_backend::network::NetworkBackend;
 use connectivity_domain::{
     network::{
-        ethernet::{ApplyEthernetConfigRequest, EthernetConfig},
-        interface::{NetworkInterface},
+        interface::NetworkInterface,
+        ip::{Ipv4Config, Ipv6Config},
         vpn::{ConnectVpnRequest, VpnProfile, VpnStatus},
-        wifi::{SavedWifiNetwork, WifiConnectRequest, WifiNetwork, WifiScanRequest},
+        wifi::{SavedWifiNetwork, WifiConnectRequest, WifiNetwork},
     },
     ConnectivityError,
 };
 use nmrs::{NetworkManager, ConnectionError};
+
+use crate::mapping::map_device;
 
 pub fn map_zbus_err(e: ConnectionError) -> ConnectivityError {
     ConnectivityError::BackendFailure(e.to_string())
@@ -24,49 +27,36 @@ impl NetworkManagerBackend {
         Self
     }
 
-    pub async fn manager(&self) -> Result<NetworkManager, ConnectivityError> {
+    pub async fn nm(&self) -> Result<NetworkManager, ConnectivityError> {
         NetworkManager::new()
             .await
-            .map_err(|e| ConnectivityError::BackendFailure(e.to_string()))
+            .map_err(map_zbus_err)
     }
 }
 
 #[async_trait]
 impl NetworkBackend for NetworkManagerBackend {
     async fn list_interfaces(&self) -> Result<Vec<NetworkInterface>, ConnectivityError> {
-        let manager = self
-            .manager()
-            .await?;
-
-        let devices = manager
+        let nm = self.nm().await?;
+        let devices = nm
             .list_devices()
             .await
             .map_err(map_zbus_err)?;
 
-        let mut result = Vec::new();
-
-        for device in devices {
-            let id = device.interface;
-            let kind = device.device_type;
-            let state = device.state;
-            let enabled = device.managed.unwrap_or(false);
-            let mac_address = device.identity;
-            result.push(NetworkInterface {
-                id: id.clone().into(),
-                name: id.into(),
-                kind: kind.into(),
-                state: state.into(),
-                carrier: None,
-                enabled,
-                mac_address: mac_address.current_mac.into(),
-            });
-        }
+        let result = devices
+            .into_iter()
+            .map(|d| map_device(d.interface, d.device_type, d.state))
+            .collect();
 
         Ok(result)
     }
 
     async fn get_interface(&self, interface_id: &str) -> Result<NetworkInterface, ConnectivityError> {
-        Err(ConnectivityError::Unsupported)
+        let interfaces = self.list_interfaces().await?;
+        interfaces
+            .into_iter()
+            .find(|i| i.id == interface_id)
+            .ok_or(ConnectivityError::InterfaceNotFound)
     }
 
     async fn set_interface_enabled(&self, interface_id: &str, enabled: bool) -> Result<(), ConnectivityError> {
