@@ -317,6 +317,7 @@ dependencies = [
  "connectivity-backend",
  "connectivity-domain",
  "nmrs",
+ "tokio",
  "tracing",
  "uuid",
 ]
@@ -389,7 +390,7 @@ dependencies = [
  "anyhow",
  "connectivity-app",
  "connectivity-backend-bluez",
- "connectivity-backend-nm",
+ "connectivity-backend-nmrs",
  "connectivity-config",
  "connectivity-dbus",
  "connectivity-events",

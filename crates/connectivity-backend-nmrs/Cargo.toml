@@ -10,6 +10,7 @@ async-trait.workspace = true
 tracing.workspace = true
 nmrs.workspace = true
 uuid.workspace = true
+tokio.workspace = true
 
 connectivity-backend = { path = "../connectivity-backend" }
 connectivity-domain = { path = "../connectivity-domain" }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use connectivity_app::context::AppContext;
 use connectivity_backend_bluez::BluezPeripheralBackend;
-use connectivity_backend_nm::NetworkManagerBackend;
+use connectivity_backend_nmrs::NmrsNetworkBackend;
 use connectivity_config::Config;
 use connectivity_dbus::DbusServer;
 use connectivity_events::EventBus;
@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
     let config = Config::default();
     let events = EventBus::new(256);
 
-    let network_backend = Arc::new(NetworkManagerBackend::new());
+    let network_backend = Arc::new(NmrsNetworkBackend::new());
     let bluetooth_backend = Arc::new(BluezPeripheralBackend::new());
 
     let ctx = Arc::new(AppContext::new(network_backend, bluetooth_backend, events));

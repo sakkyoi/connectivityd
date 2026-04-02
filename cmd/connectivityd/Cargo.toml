@@ -13,7 +13,7 @@ tracing-subscriber.workspace = true
 
 connectivity-app = { path = "../../crates/connectivity-app" }
 connectivity-backend-bluez = { path = "../../crates/connectivity-backend-bluez" }
-connectivity-backend-nm = { path = "../../crates/connectivity-backend-nm" }
+connectivity-backend-nmrs = { path = "../../crates/connectivity-backend-nmrs" }
 connectivity-config = { path = "../../crates/connectivity-config" }
 connectivity-dbus = { path ="../../crates/connectivity-dbus" }
 connectivity-events = { path = "../../crates/connectivity-events" }
