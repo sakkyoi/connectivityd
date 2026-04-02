@@ -7,8 +7,7 @@ use crate::{
     advertising::AdvertisingObject,
     bluetooth::BluetoothObject,
     gatt_host::GattHostObject,
-    network::{NetworkObject, WifiObject},
-    vpn::VpnObject,
+    network::{IpObject, NetworkObject, VpnObject, WifiObject},
 };
 
 pub struct DbusServer {
@@ -25,6 +24,7 @@ impl DbusServer {
             .name("com.example.Connectivity")?
             .serve_at("/com/example/Connectivity/Network", NetworkObject::new(self.ctx.clone()))?
             .serve_at("/com/example/Connectivity/Network/WiFi", WifiObject::new(self.ctx.clone()))?
+            .serve_at("/com/example/Connectivity/Network/IP", IpObject::new(self.ctx.clone()))?
             .serve_at("/com/example/Connectivity/Network/VPN", VpnObject::new(self.ctx.clone()))?
             .serve_at("/com/example/Connectivity/Bluetooth", BluetoothObject::new(self.ctx.clone()))?
             .serve_at("/com/example/Connectivity/Bluetooth/Advertising", AdvertisingObject::new(self.ctx.clone()))?
