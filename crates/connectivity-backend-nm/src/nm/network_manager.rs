@@ -18,6 +18,10 @@ impl<'a> NmNetworkManager<'a> {
 
         Ok(Self { proxy })
     }
+}
+
+impl<'a> NmNetworkManager<'a> {
+    // methods
 
     /// Reloads NetworkManager configuration and state.
     ///
