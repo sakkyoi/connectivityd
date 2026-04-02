@@ -220,7 +220,7 @@ pub trait PropertyAccess: HasProxy {
     /// # Example
     ///
     /// ```rust
-    /// let state: u32 = object.prop("State").get().awaot?;
+    /// let state: u32 = object.prop("State").get().await?;
     /// ```
     fn prop<T>(&self, name: &'static str) -> Property<'_, Self, T>
     where
