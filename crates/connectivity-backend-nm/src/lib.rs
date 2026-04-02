@@ -39,7 +39,7 @@ impl NetworkBackend for NetworkManagerBackend {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn get_interface(&self, interface_id: &str) -> Result<NetworkInterface, ConnectivityError> {
+    async fn get_interface(&self, _interface_id: &str) -> Result<NetworkInterface, ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
@@ -47,27 +47,27 @@ impl NetworkBackend for NetworkManagerBackend {
     // Wi-Fi control
     //
 
-    async fn set_wifi_enabled(&self, interface_id: Option<&str>, enabled: bool) -> Result<(), ConnectivityError> {
+    async fn set_wifi_enabled(&self, _interface_id: Option<&str>, _enabled: bool) -> Result<(), ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn list_visible_wifi_networks(&self, interface_id: Option<&str>) -> Result<Vec<WifiNetwork>, ConnectivityError> {
+    async fn list_visible_wifi_networks(&self, _interface_id: Option<&str>) -> Result<Vec<WifiNetwork>, ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn connect_wifi(&self, request: WifiConnectRequest) -> Result<(), ConnectivityError> {
+    async fn connect_wifi(&self, _request: WifiConnectRequest) -> Result<(), ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn disconnect_wifi(&self, interface_id: Option<&str>) -> Result<(), ConnectivityError> {
+    async fn disconnect_wifi(&self, _interface_id: Option<&str>) -> Result<(), ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn list_saved_wifi_networks(&self, interface_id: Option<&str>) -> Result<Vec<SavedWifiNetwork>, ConnectivityError> {
+    async fn list_saved_wifi_networks(&self, _interface_id: Option<&str>) -> Result<Vec<SavedWifiNetwork>, ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn forget_wifi_network(&self, network_id: &str) -> Result<(), ConnectivityError> {
+    async fn forget_wifi_network(&self, _network_id: &str) -> Result<(), ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
@@ -75,19 +75,19 @@ impl NetworkBackend for NetworkManagerBackend {
     // IP config
     //
 
-    async fn get_ipv4_config(&self, interface_id: &str) -> Result<Option<Ipv4Config>, ConnectivityError> {
+    async fn get_ipv4_config(&self, _interface_id: &str) -> Result<Option<Ipv4Config>, ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn set_ipv4_config(&self, interface_id: &str, config: Ipv4Config) -> Result<(), ConnectivityError> {
+    async fn set_ipv4_config(&self, _interface_id: &str, config: Ipv4Config) -> Result<(), ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn get_ipv6_config(&self, interface_id: &str) -> Result<Option<Ipv6Config>, ConnectivityError> {
+    async fn get_ipv6_config(&self, _interface_id: &str) -> Result<Option<Ipv6Config>, ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn set_ipv6_config(&self, interface_id: &str, config: Ipv6Config) -> Result<(), ConnectivityError> {
+    async fn set_ipv6_config(&self, _interface_id: &str, _config: Ipv6Config) -> Result<(), ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
@@ -99,15 +99,15 @@ impl NetworkBackend for NetworkManagerBackend {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn connect_vpn(&self, request: ConnectVpnRequest) -> Result<(), ConnectivityError> {
+    async fn connect_vpn(&self, _request: ConnectVpnRequest) -> Result<(), ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn disconnect_vpn(&self, profile_id: &str) -> Result<(), ConnectivityError> {
+    async fn disconnect_vpn(&self, _profile_id: &str) -> Result<(), ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn get_vpn_status(&self, profile_id: &str) -> Result<VpnStatus, ConnectivityError> {
+    async fn get_vpn_status(&self, _profile_id: &str) -> Result<VpnStatus, ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 }
