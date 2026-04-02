@@ -1,3 +1,5 @@
+mod nm;
+
 use async_trait::async_trait;
 use connectivity_backend::network::NetworkBackend;
 use connectivity_domain::{
