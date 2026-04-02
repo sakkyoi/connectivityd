@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use nmrs::{DeviceType, DeviceState};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NetworkInterfaceKind {

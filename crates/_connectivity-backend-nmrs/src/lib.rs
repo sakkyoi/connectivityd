@@ -13,7 +13,7 @@ use connectivity_domain::{
     ConnectivityError,
 };
 use mapping::{map_device, map_visible_wifi};
-use nmrs::{NetworkManager, ConnectionError};
+use nmrs::{NetworkManager, ConnectionError, DeviceType};
 use security::map_connect_security;
 
 use tokio::{task, sync::oneshot};
@@ -81,41 +81,39 @@ impl NetworkBackend for NmrsNetworkBackend {
 
     async fn list_visible_wifi_networks(
         &self,
-        _interface_id: Option<&str>,
+        interface_id: Option<&str>,
     ) -> Result<Vec<WifiNetwork>, ConnectivityError> {
         let nm = self.nm().await?;
-        let (tx, rx) = oneshot::channel();
 
-        task::spawn_blocking(move || {
-            let rt = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .map_err(|_| ConnectivityError::BackendFailure("internal error".into()))?;
-
-            rt.block_on(async {
-                let local = task::LocalSet::new();
-                local.run_until(async move {
-                    let result = nm.list_networks().await;
-                    let _ = tx.send(result);
-                }).await;
-            });
-            Ok::<(), ConnectivityError>(())
-        });
-
-        let nm = self.nm().await?;
+        // let devices = nm
+        //     .list_devices()
+        //     .await
+        //     .map_err(map_zbus_err)?;
+        //
+        // let mut results = Vec::new();
+        //
+        // for device in devices {
+        //     if device.device_type != DeviceType::Wifi {
+        //         continue;
+        //     }
+        //
+        //     device.
+        // }
 
         let current_ssid = nm
             .current_ssid()
             .await;
 
-        let networks = rx.await
-            .map_err(|_| ConnectivityError::BackendFailure("internal error".into()))?
+        let networks = nm
+            .list_networks()
+            .await
             .map_err(map_zbus_err)?;
 
-        Ok(networks
-            .into_iter()
-            .map(|network| map_visible_wifi(network, current_ssid.as_deref()))
-            .collect())
+        // Ok(networks
+        //     .into_iter()
+        //     .map(|network| map_visible_wifi(network, current_ssid.as_deref()))
+        //     .collect())
+        Err(ConnectivityError::Unsupported)
     }
 
     async fn connect_wifi(&self, request: WifiConnectRequest) -> Result<(), ConnectivityError> {

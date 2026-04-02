@@ -12,4 +12,4 @@ zbus.workspace = true
 uuid.workspace = true
 
 connectivity-backend = { path = "../connectivity-backend" }
-connectivity-domain = { path = "../connectivity-domain" }
+connectivity-domain = { path ="../connectivity-domain" }
