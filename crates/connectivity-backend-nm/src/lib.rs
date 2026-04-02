@@ -24,7 +24,7 @@ impl NetworkManagerBackend {
         Self
     }
 
-    pub async fn nm(&self) -> Result<Connection, ConnectivityError> {
+    pub async fn connection(&self) -> Result<Connection, ConnectivityError> {
         Connection::system()
             .await
             .map_err(map_zbus_err)
