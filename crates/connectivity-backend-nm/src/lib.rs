@@ -79,7 +79,7 @@ impl NetworkBackend for NetworkManagerBackend {
         Err(ConnectivityError::Unsupported)
     }
 
-    async fn set_ipv4_config(&self, _interface_id: &str, config: Ipv4Config) -> Result<(), ConnectivityError> {
+    async fn set_ipv4_config(&self, _interface_id: &str, _config: Ipv4Config) -> Result<(), ConnectivityError> {
         Err(ConnectivityError::Unsupported)
     }
 
