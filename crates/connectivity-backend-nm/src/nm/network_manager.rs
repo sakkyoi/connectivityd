@@ -99,7 +99,7 @@ impl<'a> NmNetworkManager<'a> {
         device: OwnedObjectPath,
         specific_object: OwnedObjectPath,
     ) -> zbus::Result<OwnedObjectPath> {
-        todo!()
+        self.proxy.call("ActivateConnection", &(connection, device, specific_object)).await
     }
 
     pub async fn add_and_activate_connection(
@@ -108,7 +108,7 @@ impl<'a> NmNetworkManager<'a> {
         device: OwnedObjectPath,
         specific_object: OwnedObjectPath,
     ) -> zbus::Result<(OwnedObjectPath, OwnedObjectPath)> {
-        todo!()
+        self.proxy.call("AddAndActivateConnection", &(connection, device, specific_object)).await
     }
 
     pub async fn add_and_activate_connection2(
@@ -118,35 +118,35 @@ impl<'a> NmNetworkManager<'a> {
         specific_object: OwnedObjectPath,
         options: HashMap<String, OwnedValue>,
     ) -> zbus::Result<(OwnedObjectPath, OwnedObjectPath, HashMap<String, OwnedValue>)> {
-        todo!()
+        self.proxy.call("AddAndActivateConnection2", &(connection, device, specific_object, options)).await
     }
 
     pub async fn deactivate_connection(&self, active_connection: OwnedObjectPath) -> zbus::Result<()> {
-        todo!()
+        self.proxy.call("DeactivateConnection", &(active_connection)).await
     }
 
     pub async fn sleep(&self, sleep: bool) -> zbus::Result<()> {
-        todo!()
+        self.proxy.call("Sleep", &(sleep)).await
     }
 
     pub async fn enable(&self, enable: bool) -> zbus::Result<()> {
-        todo!()
+        self.proxy.call("Enable", &(enable)).await
     }
 
     pub async fn get_permissions(&self) -> zbus::Result<HashMap<String, String>> {
-        todo!()
+        self.proxy.call("GetPermissions", &()).await
     }
 
     pub async fn set_logging(&self, level: &str, domains: &str) -> zbus::Result<()> {
-        todo!()
+        self.proxy.call("SetLogging", &(level, domains)).await
     }
 
     pub async fn check_connectivity(&self) -> zbus::Result<u32> {
-        todo!()
+        self.proxy.call("CheckConnectivity", &()).await
     }
 
     pub async fn state(&self) -> zbus::Result<u32> {
-        todo!()
+        self.proxy.call("state", &()).await
     }
 
     pub async fn checkpoint_create(
@@ -155,18 +155,18 @@ impl<'a> NmNetworkManager<'a> {
         rollback_timeout: u32,
         flags: u32,
     ) -> zbus::Result<OwnedObjectPath> {
-        todo!()
+        self.proxy.call("CheckpointCreate", &(devices, rollback_timeout, flags)).await
     }
 
     pub async fn checkpoint_destroy(&self, checkpoint: OwnedObjectPath) -> zbus::Result<()> {
-        todo!()
+        self.proxy.call("CheckpointDestroy", &(checkpoint)).await
     }
 
     pub async fn checkpoint_rollback(&self, checkpoint: OwnedObjectPath) -> zbus::Result<HashMap<String, u32>> {
-        todo!()
+        self.proxy.call("CheckpointRollback", &(checkpoint)).await
     }
 
-    pub async fn checkpoint_adjust_rollback_timeout(&self, checkpoint: OwnedObjectPath) -> zbus::Result<u32> {
-        todo!()
+    pub async fn checkpoint_adjust_rollback_timeout(&self, checkpoint: OwnedObjectPath, add_timeout: u32) -> zbus::Result<u32> {
+        self.proxy.call("CheckpointAdjustRollbackTimeout", &(checkpoint, add_timeout)).await
     }
 }
