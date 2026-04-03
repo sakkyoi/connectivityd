@@ -1,10 +1,15 @@
 use std::collections::HashMap;
+use futures_util::Stream;
 use zbus::{
     zvariant::{OwnedObjectPath, OwnedValue},
     Connection, Proxy,
 };
 
-use crate::nm::property::{HasProxy, Property, PropertyAccess, WritableProperty};
+use crate::nm::{
+    proxy_access::HasProxy,
+    property::{Property, PropertyAccess, WritableProperty},
+};
+use crate::nm::signal::SignalAccess;
 
 /// https://networkmanager.dev/docs/api/latest/gdbus-org.freedesktop.NetworkManager.Device.html
 pub struct NmDevice<'a> {
@@ -74,131 +79,149 @@ impl<'d, 'a> HasProxy for NmDeviceProps<'d, 'a> {
 }
 
 impl<'d, 'a> NmDeviceProps<'d, 'a> {
-    pub async fn udi(&self) -> Property<'_, Self, String> {
+    pub fn udi(&self) -> Property<'_, Self, String> {
         self.prop("Udi")
     }
 
-    pub async fn path(&self) -> Property<'_, Self, String> {
+    pub fn path(&self) -> Property<'_, Self, String> {
         self.prop("Path")
     }
 
-    pub async fn interface(&self) -> Property<'_, Self, String> {
+    pub fn interface(&self) -> Property<'_, Self, String> {
         self.prop("Interface")
     }
 
-    pub async fn ip_interface(&self) -> Property<'_, Self, String> {
+    pub fn ip_interface(&self) -> Property<'_, Self, String> {
         self.prop("IpInterface")
     }
 
-    pub async fn driver(&self) -> Property<'_, Self, String> {
+    pub fn driver(&self) -> Property<'_, Self, String> {
         self.prop("Driver")
     }
 
-    pub async fn driver_version(&self) -> Property<'_, Self, String> {
+    pub fn driver_version(&self) -> Property<'_, Self, String> {
         self.prop("DriverVersion")
     }
 
-    pub async fn firmware_version(&self) -> Property<'_, Self, String> {
+    pub fn firmware_version(&self) -> Property<'_, Self, String> {
         self.prop("FirmwareVersion")
     }
 
-    pub async fn capabilities(&self) -> Property<'_, Self, u32> {
+    pub fn capabilities(&self) -> Property<'_, Self, u32> {
         self.prop("Capabilities")
     }
 
-    pub async fn ip4_address(&self) -> Property<'_, Self, u32> {
+    pub fn ip4_address(&self) -> Property<'_, Self, u32> {
         self.prop("Ip4Address")
     }
 
-    pub async fn state(&self) -> Property<'_, Self, u32> {
+    pub fn state(&self) -> Property<'_, Self, u32> {
         self.prop("State")
     }
 
-    pub async fn state_reason(&self) -> Property<'_, Self, (u32, u32)> {
+    pub fn state_reason(&self) -> Property<'_, Self, (u32, u32)> {
         self.prop("StateReason")
     }
 
-    pub async fn active_connection(&self) -> Property<'_, Self, OwnedObjectPath> {
+    pub fn active_connection(&self) -> Property<'_, Self, OwnedObjectPath> {
         self.prop("ActiveConnection")
     }
 
-    pub async fn ip4_config(&self) -> Property<'_, Self, OwnedObjectPath> {
+    pub fn ip4_config(&self) -> Property<'_, Self, OwnedObjectPath> {
         self.prop("Ip4Config")
     }
 
-    pub async fn dhcp4_config(&self) -> Property<'_, Self, OwnedObjectPath> {
+    pub fn dhcp4_config(&self) -> Property<'_, Self, OwnedObjectPath> {
         self.prop("Dhcp4Config")
     }
 
-    pub async fn ip6_config(&self) -> Property<'_, Self, OwnedObjectPath> {
+    pub fn ip6_config(&self) -> Property<'_, Self, OwnedObjectPath> {
         self.prop("Ip6Config")
     }
 
-    pub async fn dhcp6_config(&self) -> Property<'_, Self, OwnedObjectPath> {
+    pub fn dhcp6_config(&self) -> Property<'_, Self, OwnedObjectPath> {
         self.prop("Dhcp6Config")
     }
 
-    pub async fn managed(&self) -> WritableProperty<'_, Self, bool> {
+    pub fn managed(&self) -> WritableProperty<'_, Self, bool> {
         self.prop_rw("Managed")
     }
 
-    pub async fn autoconnect(&self) -> WritableProperty<'_, Self, bool> {
+    pub fn autoconnect(&self) -> WritableProperty<'_, Self, bool> {
         self.prop_rw("Autoconnect")
     }
 
-    pub async fn firmware_missing(&self) -> Property<'_, Self, bool> {
+    pub fn firmware_missing(&self) -> Property<'_, Self, bool> {
         self.prop("FirmwareMissing")
     }
 
-    pub async fn nm_plugin_missing(&self) -> Property<'_, Self, bool> {
+    pub fn nm_plugin_missing(&self) -> Property<'_, Self, bool> {
         self.prop("NmPluginMissing")
     }
 
-    pub async fn device_type(&self) -> Property<'_, Self, u32> {
+    pub fn device_type(&self) -> Property<'_, Self, u32> {
         self.prop("DeviceType")
     }
 
-    pub async fn available_connections(&self) -> Property<'_, Self, Vec<OwnedObjectPath>> {
+    pub fn available_connections(&self) -> Property<'_, Self, Vec<OwnedObjectPath>> {
         self.prop("AvailableConnections")
     }
 
-    pub async fn physical_port_id(&self) -> Property<'_, Self, String> {
+    pub fn physical_port_id(&self) -> Property<'_, Self, String> {
         self.prop("PhysicalPortId")
     }
 
-    pub async fn mtu(&self) -> Property<'_, Self, u32> {
+    pub fn mtu(&self) -> Property<'_, Self, u32> {
         self.prop("Mtu")
     }
 
-    pub async fn metered(&self) -> Property<'_, Self, u32> {
+    pub fn metered(&self) -> Property<'_, Self, u32> {
         self.prop("Metered")
     }
 
-    pub async fn lldp_neighbors(&self) -> Property<'_, Self, Vec<HashMap<String, OwnedValue>>> {
+    pub fn lldp_neighbors(&self) -> Property<'_, Self, Vec<HashMap<String, OwnedValue>>> {
         self.prop("LldpNeighbors")
     }
 
-    pub async fn real(&self) -> Property<'_, Self, bool> {
+    pub fn real(&self) -> Property<'_, Self, bool> {
         self.prop("Real")
     }
 
-    pub async fn ip4_connectivity(&self) -> Property<'_, Self, u32> {
+    pub fn ip4_connectivity(&self) -> Property<'_, Self, u32> {
         self.prop("Ip4Connectivity")
     }
 
-    pub async fn ip6_connectivity(&self) -> Property<'_, Self, u32> {
+    pub fn ip6_connectivity(&self) -> Property<'_, Self, u32> {
         self.prop("Ip6Connectivity")
     }
 
-    pub async fn interface_flags(&self) -> Property<'_, Self, u32> {
+    pub fn interface_flags(&self) -> Property<'_, Self, u32> {
         self.prop("InterfaceFlags")
     }
 
-    pub async fn hw_address(&self) -> Property<'_, Self, String> {
+    pub fn hw_address(&self) -> Property<'_, Self, String> {
         self.prop("HwAddress")
     }
 
-    pub async fn ports(&self) -> Property<'_, Self, Vec<OwnedObjectPath>> {
+    pub fn ports(&self) -> Property<'_, Self, Vec<OwnedObjectPath>> {
         self.prop("Ports")
+    }
+}
+
+pub struct NmDeviceSignals<'d, 'a> {
+    pub(crate) inner: &'d NmDevice<'a>,
+}
+
+impl<'d, 'a> HasProxy for NmDeviceSignals<'d, 'a> {
+    fn proxy(&self) -> &Proxy<'_> {
+        &self.inner.proxy
+    }
+}
+
+impl<'d, 'a> NmDeviceSignals<'d, 'a> {
+    pub async fn state_changed(
+        &self,
+    ) -> zbus::Result<impl Stream<Item = zbus::Result<(u32, u32, u32)>> + '_> {
+        self.receive_signal_typed("StateChanged").await
     }
 }

@@ -4,18 +4,7 @@ use zbus::{
     zvariant::{OwnedValue, Value},
 };
 
-/// Trait representing the minimal capability required to access D-Bus properties.
-///
-/// This is the minimal capability required for interacting with
-/// D-Bus properties via the standard `org.freedesktop.DBus.Properties`
-/// interface
-///
-/// Any type that owns or wraps a `zbus::Proxy` can implement this trait
-/// to gain access to generic property helpers.
-pub trait HasProxy {
-    /// Returns a reference to the underlying D-Bus proxy.
-    fn proxy(&self) -> &Proxy<'_>;
-}
+use crate::nm::proxy_access::HasProxy;
 
 /// A generic read-only D-Bus property accessor.
 ///

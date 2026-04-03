@@ -9,6 +9,9 @@ rust-version.workspace = true
 async-trait.workspace = true
 tracing.workspace = true
 zbus.workspace = true
+futures-util.workspace = true
+serde.workspace = true
+bitflags.workspace = true
 uuid.workspace = true
 
 connectivity-backend = { path = "../connectivity-backend" }
